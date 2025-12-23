@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 import tldextract
 
 
-# --- Known legitimate domains (for typosquatting detection)
+# Domains
 LEGITIMATE_DOMAINS = {
     "paypal",
     "google",
@@ -16,12 +16,12 @@ LEGITIMATE_DOMAINS = {
     "github"
 }
 
-# --- Suspicious TLDs
+# TLDs
 SUSPICIOUS_TLDS = {
     "xyz", "top", "pl", "cn", "tk", "ml", "ga", "cf"
 }
 
-# --- URL shorteners
+# URL shorteners
 URL_SHORTENERS = {
     "bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly"
 }
@@ -60,22 +60,18 @@ def analyze_url(url: str) -> dict:
 
     parsed = urlparse(url)
 
-    # 1. IP address instead of domain
     if re.match(r"^\d{1,3}(\.\d{1,3}){3}$", parsed.netloc):
         score += 3
         reasons.append("URL uses IP address instead of domain")
 
-    # 2. URL length
     if len(url) > 75:
         score += 1
         reasons.append("URL is unusually long")
 
-    # 3. Suspicious characters
     if "@" in url or url.count("//") > 1:
         score += 2
         reasons.append("Suspicious characters in URL")
 
-    # 4. Domain analysis
     extracted = tldextract.extract(url)
     domain = f"{extracted.domain}.{extracted.suffix}"
 
@@ -87,7 +83,6 @@ def analyze_url(url: str) -> dict:
         score += 3
         reasons.append("URL shortener detected")
 
-    # 5. Typosquatting detection (Levenshtein distance)
     for legit in LEGITIMATE_DOMAINS:
         distance = levenshtein_distance(extracted.domain, legit)
         if 0 < distance <= 2:
